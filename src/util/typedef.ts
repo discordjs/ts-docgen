@@ -5,6 +5,8 @@ import { DocType, parseType, typeUtil } from './types';
 export interface TypedefDoc {
 	name: string;
 	description?: string | undefined;
+	extendedDescription?: string | undefined;
+	variant: 'type' | 'interface' | 'enum';
 	see?: string[] | undefined;
 	access?: 'private' | undefined;
 	deprecated?: boolean | undefined;
@@ -16,10 +18,23 @@ export interface TypedefDoc {
 	meta?: DocMeta | undefined;
 }
 
+function parseKindString(kindString: DeclarationReflection['kindString']): TypedefDoc['variant'] {
+	switch (kindString?.toLowerCase()) {
+		case 'interface':
+			return 'interface';
+		case 'enumeration':
+			return 'enum';
+		case 'type alias':
+		default:
+			return 'type';
+	}
+}
+
 export function parseTypedef(element: DeclarationReflection): TypedefDoc {
 	const baseReturn: TypedefDoc = {
 		name: element.name,
 		description: element.comment?.shortText?.trim(),
+		extendedDescription: element.comment?.text?.trim(),
 		see: element.comment?.tags?.filter((t) => t.tag === 'see').map((t) => t.text.trim()),
 		access:
 			element.flags.isPrivate || element.comment?.tags?.some((t) => t.tag === 'private' || t.tag === 'internal')
@@ -29,6 +44,7 @@ export function parseTypedef(element: DeclarationReflection): TypedefDoc {
 		// @ts-ignore
 		type: element.type ? parseType(element.type) : undefined,
 		meta: parseMeta(element),
+		variant: parseKindString(element.kindString),
 	};
 
 	let typeDef: DeclarationReflection | undefined;

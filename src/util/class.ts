@@ -6,9 +6,11 @@ import { DocType, parseType, parseTypeSimple } from './types';
 export interface ClassDoc {
 	name: string;
 	description?: string | undefined;
+	extendedDescription?: string | undefined;
 	see?: string[] | undefined;
 	extends?: [string] | undefined;
 	implements?: [string] | undefined;
+	examples?: string[] | undefined;
 	access?: 'private' | undefined;
 	abstract?: boolean | undefined;
 	deprecated?: boolean | undefined;
@@ -22,6 +24,8 @@ export interface ClassDoc {
 export function parseClass(element: DeclarationReflection): ClassDoc {
 	const extended = element.extendedTypes?.[0];
 	const implemented = element.implementedTypes?.[0];
+	const examples = element.comment?.tags?.filter((t) => t.tag === 'example')?.map((t) => t.text.trim());
+
 	const construct = element.children?.find((c) => c.kindString === 'Constructor');
 	// Ignore setter-only accessors (the typings still exist, but the docs don't show them)
 	const props = element.children?.filter(
@@ -35,9 +39,11 @@ export function parseClass(element: DeclarationReflection): ClassDoc {
 	return {
 		name: element.name === 'default' ? path.parse(meta?.file ?? 'default').name : element.name,
 		description: element.comment?.shortText?.trim(),
+		extendedDescription: element.comment?.text?.trim(),
 		see: element.comment?.tags?.filter((t) => t.tag === 'see').map((t) => t.text.trim()),
 		extends: extended ? [parseTypeSimple(extended)] : undefined,
 		implements: implemented ? [parseTypeSimple(implemented)] : undefined,
+		examples: examples ? examples : undefined,
 		access:
 			element.flags.isPrivate || element.comment?.tags?.some((t) => t.tag === 'private' || t.tag === 'internal')
 				? 'private'
@@ -55,6 +61,7 @@ export function parseClass(element: DeclarationReflection): ClassDoc {
 interface ClassPropDoc {
 	name: string;
 	description?: string | undefined;
+	extendedDescription?: string | undefined;
 	see?: string[] | undefined;
 	scope?: 'static' | undefined;
 	access?: 'private' | undefined;
@@ -72,6 +79,7 @@ function parseClassProp(element: DeclarationReflection): ClassPropDoc {
 	const base: ClassPropDoc = {
 		name: element.name,
 		description: element.comment?.shortText?.trim(),
+		extendedDescription: element.comment?.text?.trim(),
 		see: element.comment?.tags?.filter((t) => t.tag === 'see').map((t) => t.text.trim()),
 		scope: element.flags.isStatic ? 'static' : undefined,
 		access:
@@ -108,6 +116,7 @@ function parseClassProp(element: DeclarationReflection): ClassPropDoc {
 		return {
 			...res,
 			description: getter.comment?.shortText?.trim(),
+			extendedDescription: getter.comment?.text?.trim(),
 			see: getter.comment?.tags?.filter((t) => t.tag === 'see').map((t) => t.text.trim()),
 			access:
 				getter.flags.isPrivate || getter.comment?.tags?.some((t) => t.tag === 'private' || t.tag === 'internal')
@@ -132,6 +141,7 @@ function parseClassProp(element: DeclarationReflection): ClassPropDoc {
 interface ClassMethodDoc {
 	name: string;
 	description?: string | undefined;
+	extendDescription?: string | undefined;
 	see?: string[] | undefined;
 	scope?: 'static' | undefined;
 	access?: 'private' | undefined;
@@ -167,6 +177,7 @@ export function parseClassMethod(element: DeclarationReflection): ClassMethodDoc
 	return {
 		name: element.name,
 		description: signature.comment?.shortText?.trim(),
+		extendDescription: signature.comment?.text?.trim(),
 		see: signature.comment?.tags?.filter((t) => t.tag === 'see').map((t) => t.text.trim()),
 		scope: element.flags.isStatic ? 'static' : undefined,
 		access:
@@ -203,6 +214,7 @@ export function parseParam(param: DeclarationReflection): ClassMethodParamDoc {
 interface ClassEventDoc {
 	name: string;
 	description?: string | undefined;
+	extendedDescription?: string | undefined;
 	see?: string[] | undefined;
 	deprecated?: boolean | undefined;
 	params?:
