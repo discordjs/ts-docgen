@@ -5,9 +5,8 @@
 	"scripts": {
 		"prebuild": "npm run lint",
 		"build": "tsup",
-		"lint": "eslint src --ext mjs,js,ts",
-		"lint:fix": "eslint src --ext mjs,js,ts --fix",
-		"format": "prettier --write **/*.{ts,js,json,yml,yaml}",
+		"lint": "prettier --check . && eslint src --ext mjs,js,ts",
+		"format": "prettier --write . && eslint src --ext mjs,js,ts --fix",
 		"prepare": "is-ci || husky install",
 		"prepublishOnly": "npm run lint",
 		"release": "standard-version --preset angular"

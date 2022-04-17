@@ -1,6 +1,6 @@
-import { DeclarationReflection, DocMeta, parseMeta } from '../documentation';
 import type { ClassMethodParamDoc } from './class';
 import { DocType, parseType, typeUtil } from './types';
+import { DeclarationReflection, DocMeta, parseMeta } from '../documentation';
 
 export interface TypedefDoc {
 	name: string;
@@ -26,7 +26,7 @@ export function parseTypedef(element: DeclarationReflection): TypedefDoc {
 				? 'private'
 				: undefined,
 		deprecated: element.comment?.tags?.some((t) => t.tag === 'deprecated'),
-		// @ts-ignore
+		// @ts-expect-error
 		type: element.type ? parseType(element.type) : undefined,
 		meta: parseMeta(element),
 	};
@@ -63,7 +63,7 @@ export function parseTypedef(element: DeclarationReflection): TypedefDoc {
 					child.comment?.tags?.find((t) => t.tag === 'default')?.text?.trim() ??
 					(child.defaultValue === '...' ? undefined : child.defaultValue),
 				type: child.type
-					? // @ts-ignore
+					? // @ts-expect-error
 					  parseType(child.type)
 					: child.kindString === 'Method'
 					? parseType({
@@ -91,7 +91,7 @@ export function parseTypedef(element: DeclarationReflection): TypedefDoc {
 					// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 					param.comment?.tags?.find((t) => t.tag === 'default')?.text?.trim() ??
 					(param.defaultValue === '...' ? undefined : param.defaultValue),
-				// @ts-ignore
+				// @ts-expect-error
 				type: param.type ? parseType(param.type) : undefined,
 			}));
 

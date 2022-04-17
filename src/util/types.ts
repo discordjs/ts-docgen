@@ -1,6 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import type { JSONOutput } from 'typedoc';
-
-import type { DeclarationReflection } from '../documentation';
 
 // #region Type-guard functions
 function isArrayType(value: any): value is JSONOutput.ArrayType {
@@ -113,13 +112,13 @@ export function parseTypeSimple(t: JSONOutput.SomeType): string {
 	if (isReflectionType(t)) {
 		const obj: Record<string, any> = {};
 
-		const { children, signatures } = t.declaration as DeclarationReflection;
+		const { children, signatures } = t.declaration!;
 
 		// This is run when we're parsing interface-like declaration
 		if (children && children.length > 0) {
 			for (const child of children) {
 				const { type } = child;
-				// @ts-ignore
+				// @ts-expect-error
 				if (type) obj[child.name] = parseType(type);
 			}
 			return `{\n${Object.entries(obj)
@@ -130,7 +129,7 @@ export function parseTypeSimple(t: JSONOutput.SomeType): string {
 		// This is run if we're parsing a function type
 		if (signatures && signatures.length > 0) {
 			const s = signatures[0];
-			// @ts-ignore
+			// @ts-expect-error
 			const params = s.parameters?.map((p) => `${p.name}: ${p.type ? parseType(p.type) : 'unknown'}`);
 			return `(${params?.join(', ') ?? '...args: unknown[]'}) => ${s.type ? parseType(s.type) : 'unknown'}`;
 		}
@@ -151,7 +150,7 @@ export function parseTypeSimple(t: JSONOutput.SomeType): string {
 	if (isUnionType(t)) {
 		return (
 			t.types
-				// @ts-ignore
+				// @ts-expect-error
 				.map(parseType)
 				.filter((s) => Boolean(s) && s.trim().length > 0)
 				.join(' | ')

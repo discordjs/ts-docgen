@@ -28,6 +28,29 @@ interface CodeDoc {
 	typedefs: TypedefDoc[];
 }
 
+function parseRootElement(element: DeclarationReflection) {
+	switch (element.kindString) {
+		case 'Class':
+			return {
+				type: 'class',
+				value: parseClass(element),
+			};
+
+		case 'Interface':
+		case 'Type alias':
+		case 'Enumeration':
+			return {
+				type: 'typedef',
+				value: parseTypedef(element),
+			};
+
+		// Externals?
+
+		default:
+			return {};
+	}
+}
+
 export function generateDocs(data: ProjectData): CodeDoc {
 	const classes = [];
 	// interfaces = [], // not using this at the moment
@@ -50,29 +73,6 @@ export function generateDocs(data: ProjectData): CodeDoc {
 		// externals,
 		typedefs,
 	};
-}
-
-function parseRootElement(element: DeclarationReflection) {
-	switch (element.kindString) {
-		case 'Class':
-			return {
-				type: 'class',
-				value: parseClass(element),
-			};
-
-		case 'Interface':
-		case 'Type alias':
-		case 'Enumeration':
-			return {
-				type: 'typedef',
-				value: parseTypedef(element),
-			};
-
-		// Externals?
-
-		default:
-			return {};
-	}
 }
 
 export interface DocMeta {

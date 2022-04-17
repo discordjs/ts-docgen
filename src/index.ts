@@ -1,7 +1,11 @@
-import type { JSONOutput } from 'typedoc';
-import { join, extname, basename, dirname, relative, normalize } from 'node:path';
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { readFile, writeFile } from 'node:fs/promises';
+import { join, extname, basename, dirname, relative, normalize } from 'node:path';
 import { load } from 'js-yaml';
+import type { JSONOutput } from 'typedoc';
 
 import { FORMAT_VERSION, generateDocs, generateFinalOutput } from './documentation';
 
@@ -54,6 +58,18 @@ interface Config {
 	config?: string;
 }
 
+function parseConfig(config: Config) {
+	if (config.source) config.source = config.source.map(normalize);
+	if (config.existingOutput) config.existingOutput = normalize(config.existingOutput);
+	if (config.custom) config.custom = normalize(config.custom);
+	config.root = normalize(config.root ?? '.');
+	if (config.output) config.output = normalize(config.output);
+	if (!config.spaces) config.spaces = 0;
+	if (!config.verbose) config.verbose = false;
+
+	return config;
+}
+
 export function runGenerator(config: Config) {
 	config = parseConfig(config);
 
@@ -87,7 +103,6 @@ export function runGenerator(config: Config) {
 			for (const cat of definitions) {
 				// Add the category to the custom docs
 				const catID = cat.id || cat.name.toLowerCase();
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				const dir = join(customDir, cat.path || catID);
 				const category: typeof custom['category'] = {
 					name: cat.name || cat.id,
@@ -97,11 +112,8 @@ export function runGenerator(config: Config) {
 
 				// Add every file in the category
 				for (const file of cat.files) {
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 					const fileRootPath = join(dir, file.path);
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 					const extension = extname(file.path);
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 					const fileID = file.id || basename(file.path, extension);
 					category.files[fileID] = null;
 
@@ -153,16 +165,4 @@ export function runGenerator(config: Config) {
 			console.error(err);
 			process.exit(1);
 		});
-}
-
-function parseConfig(config: Config) {
-	if (config.source) config.source = config.source.map(normalize);
-	if (config.existingOutput) config.existingOutput = normalize(config.existingOutput);
-	if (config.custom) config.custom = normalize(config.custom);
-	config.root = normalize(config.root ?? '.');
-	if (config.output) config.output = normalize(config.output);
-	if (!config.spaces) config.spaces = 0;
-	if (!config.verbose) config.verbose = false;
-
-	return config;
 }
