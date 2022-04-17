@@ -149,7 +149,7 @@ interface ClassMethodDoc {
 				description?: string | undefined;
 				optional?: boolean | undefined;
 				default?: string | boolean | number | undefined;
-				variable?: never | undefined; // it would already be in the type
+				variable?: boolean | undefined;
 				nullable?: never | undefined; // it would already be in the type
 				type?: DocType | undefined;
 		  }[]
@@ -197,6 +197,7 @@ export function parseParam(param: DeclarationReflection): ClassMethodParamDoc {
 			(param.defaultValue === '...' ? undefined : param.defaultValue),
 		// @ts-ignore
 		type: param.type ? parseType(param.type) : undefined,
+		variable: param.flags.isRest,
 	};
 }
 
@@ -211,7 +212,7 @@ interface ClassEventDoc {
 				description?: string | undefined;
 				optional?: boolean | undefined;
 				default?: string | boolean | number | undefined;
-				variable?: never | undefined; // it would already be in the type
+				variable?: boolean | undefined;
 				nullable?: never | undefined; // it would already be in the type
 				type?: DocType | undefined;
 		  }[]
