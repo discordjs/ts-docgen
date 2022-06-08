@@ -2,6 +2,7 @@ import path from 'path';
 import type { JSONOutput } from 'typedoc';
 import type { customSettings, ProjectData } from './index';
 import { ClassDoc, parseClass } from './util/class';
+import { FunctionDoc, parseFunction } from './util/function';
 import { TypedefDoc, parseTypedef } from './util/typedef';
 import { version } from '../package.json';
 
@@ -26,9 +27,24 @@ interface CodeDoc {
 	// interfaces: unknown[]
 	// external: unknown[]
 	typedefs: TypedefDoc[];
+	functions: FunctionDoc[];
 }
 
-function parseRootElement(element: DeclarationReflection) {
+type RootElement =
+	| {
+			type: 'class';
+			value: ClassDoc;
+	  }
+	| {
+			type: 'typedef';
+			value: TypedefDoc;
+	  }
+	| {
+			type: 'function';
+			value: FunctionDoc;
+	  };
+
+function parseRootElement(element: DeclarationReflection): RootElement | undefined {
 	switch (element.kindString) {
 		case 'Class':
 			return {
@@ -44,27 +60,35 @@ function parseRootElement(element: DeclarationReflection) {
 				value: parseTypedef(element),
 			};
 
+		case 'Function': {
+			return {
+				type: 'function',
+				value: parseFunction(element),
+			};
+		}
+
 		// Externals?
 
 		default:
-			return {};
 	}
 }
 
 export function generateDocs(data: ProjectData): CodeDoc {
-	const classes = [];
+	const classes: ClassDoc[] = [];
 	// interfaces = [], // not using this at the moment
 	// externals = [], // ???
-	const typedefs = [];
+	const typedefs: TypedefDoc[] = [];
+	const functions: FunctionDoc[] = [];
 
 	for (const c of data.children ?? []) {
-		const { type, value } = parseRootElement(c);
-		if (!value) continue;
+		const root = parseRootElement(c);
+		if (!root) continue;
 
-		if (type === 'class') classes.push(value);
-		// if (type == 'interface') interfaces.push(value)
-		if (type === 'typedef') typedefs.push(value);
-		// if (type == 'external') externals.push(value)
+		if (root.type === 'class') classes.push(root.value);
+		// if (root.type == 'interface') interfaces.push(root.value)
+		if (root.type === 'typedef') typedefs.push(root.value);
+		// if (root.type == 'external') externals.push(root.value)
+		if (root.type === 'function') functions.push(root.value);
 	}
 
 	return {
@@ -72,6 +96,7 @@ export function generateDocs(data: ProjectData): CodeDoc {
 		// interfaces,
 		// externals,
 		typedefs,
+		functions,
 	};
 }
 
